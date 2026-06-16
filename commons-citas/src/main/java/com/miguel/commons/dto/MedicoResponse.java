@@ -9,5 +9,5 @@ public record MedicoResponse(
         String cedulaProfesional,
         String especialidad,
         String disponibilidad,
-        String idDisponibilidad
+        Long idDisponibilidad
 ) {}

@@ -1,6 +1,14 @@
 package com.miguel.commons.dto;
 
 import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 public record MedicoRequest(
 
@@ -17,7 +25,7 @@ public record MedicoRequest(
         String apellidoMaterno,
 
         @NotNull(message = "La edad es requerida")
-        @Min(value = 18, message = "La edad mínima del médico es 18 años")
+        @Min(value = 18, message = "La edad mínima es de 1 año")
         @Max(value = 100, message = "La edad máxima es 100 años")
         Short edad,
 
