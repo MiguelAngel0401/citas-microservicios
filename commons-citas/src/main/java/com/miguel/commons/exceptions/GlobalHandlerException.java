@@ -1,6 +1,6 @@
 package com.miguel.commons.exceptions;
 
-import com.miguel.commos.dto.CustomErrorResponse;
+import com.miguel.commons.dto.CustomErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
