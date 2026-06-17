@@ -123,7 +123,7 @@ public class Cita {
     }
     
     private static void validarFechaCita(LocalDateTime fechaCita) {
-    	if(fechaCita == null || fechaCita.isAfter(LocalDateTime.now()))
+    	if(fechaCita == null || !fechaCita.isAfter(LocalDateTime.now()))
     		throw new IllegalStateException("La fecha de la cita es requerida y debe ser futura");
     }
     

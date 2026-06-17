@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.miguel.commons.clients.CitaClient;
 import com.miguel.commons.dto.MedicoRequest;
 import com.miguel.commons.dto.MedicoResponse;
 import com.miguel.commons.enums.DisponibilidadMedico;
@@ -29,6 +30,8 @@ public class MedicoServiceImpl implements MedicoService {
 	private final MedicoRepository medicoRepository;
 	
 	private final MedicoMapper medicoMapper;
+	
+	private final CitaClient citaClient;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -80,6 +83,8 @@ public class MedicoServiceImpl implements MedicoService {
 	    
 	    Medico medico = obtenerMedicoActivoOException(id);
 	    
+	    medicoTieneCitasAsignadas(id);
+	    
 	    medico.eliminar();
 	    
 	    log.info("Medico eliminado con id: {}", id);
@@ -93,6 +98,8 @@ public class MedicoServiceImpl implements MedicoService {
 		Medico medico = obtenerMedicoActivoOException(id);
 		
 		log.info("Actualizando Medico con id: {}",id);
+		
+		medicoTieneCitasAsignadas(id);
 		
 		validarCambiosUnicos(request, id);
 		medico.actualizar(
@@ -170,5 +177,9 @@ public class MedicoServiceImpl implements MedicoService {
 	    
 	    if(medicoRepository.existsByCedulaProfesionalIgnoreCaseAndEstadoRegistroAndIdNot(request.cedulaProfesional().trim(), EstadoRegistro.ACTIVO, id))
 	        throw new IllegalArgumentException("Ya existe un medico activo registrado con la cedula: " + request.cedulaProfesional());
+	}
+	
+	private void medicoTieneCitasAsignadas(Long idMedico) {
+		citaClient.medicoTieneCitasAsignadas(idMedico);
 	}
 }
