@@ -1,9 +1,6 @@
-package com.miguel.commons.exceptions;
+package com.miguel.auth.exceptions;
 
-import com.miguel.commons.dto.CustomErrorResponse;
-
-import feign.FeignException;
-import feign.RetryableException;
+import com.miguel.auth.dto.CustomErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -67,46 +64,6 @@ public class GlobalHandlerException {
                 .body(new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(RecursoNoEncontradoException.class)
-    public ResponseEntity<CustomErrorResponse> handleRecursoNoEncontradoException(RecursoNoEncontradoException e) {
-        log.warn("No se encontró el recurso: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new CustomErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage()));
-    }
-
-    @ExceptionHandler(EntidadRelacionadaException.class)
-    public ResponseEntity<CustomErrorResponse> handleEntidadRelacionadaException(EntidadRelacionadaException e) {
-        log.warn("Error al eliminar un recurso: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new CustomErrorResponse(HttpStatus.CONFLICT.value(), e.getMessage()));
-    }
-    
-    @ExceptionHandler(FeignException.class)
-    public ResponseEntity<CustomErrorResponse> handleGenericFeignException(FeignException e) {
-        log.error("Error en la comunicación Feign: " + e.getMessage());
-
-        int status = e.status() > 0 ? e.status() : HttpStatus.INTERNAL_SERVER_ERROR.value();
-        String message = switch (status) {
-            case 400 -> "Solicitud incorrecta al servicio remoto.";
-            case 401 -> "No autorizado para acceder al servicio remoto.";
-            case 403 -> "Acceso prohibido al servicio remoto.";
-            case 404 -> "Recurso no encontrado en el servicio remoto.";
-            case 409 -> "Conflicto: el recurso tiene dependencias activas.";
-            case 503 -> "Servicio remoto no disponible.";
-            default -> "Error al comunicarse con el servicio remoto.";
-        };
-        CustomErrorResponse response = new CustomErrorResponse(status, message);
-
-        return ResponseEntity.status(status).body(response);
-    }
-    
-    @ExceptionHandler(RetryableException.class)
-    public ResponseEntity<CustomErrorResponse> handleRetryable(RetryableException e) {
-    	log.error("Servicio remoto no disponible o no responde: " + e.getMessage());
-    	CustomErrorResponse response = new CustomErrorResponse(HttpStatus.SERVICE_UNAVAILABLE.value(),
-    			"Servicio remoto no disponible o no responde");
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
-    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CustomErrorResponse> handleGeneralException(Exception e) {

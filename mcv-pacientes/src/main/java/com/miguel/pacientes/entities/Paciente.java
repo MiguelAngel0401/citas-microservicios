@@ -18,11 +18,13 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 @Entity
 @Table(name = "PACIENTES")
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @Getter
 @ToString
@@ -70,6 +72,32 @@ public class Paciente {
     @Column(name = "ESTADO_REGISTRO", nullable = false)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private EstadoRegistro estadoRegistro;
+    
+    public static Paciente crear(String nombre, String apellidoPaterno, String apellidoMaterno,
+            Short edad, Double peso, Double estatura, String email,
+            String telefono, String direccion) {
+
+        Paciente paciente = Paciente.builder()
+                .estadoRegistro(EstadoRegistro.ACTIVO)
+                .build();
+
+        paciente.validarDatos(nombre, apellidoPaterno, apellidoMaterno, email, telefono,
+                direccion, edad, peso, estatura);
+
+        paciente.nombre = nombre.trim();
+        paciente.apellidoPaterno = apellidoPaterno.trim();
+        paciente.apellidoMaterno = apellidoMaterno.trim();
+        paciente.edad = edad;
+        paciente.peso = peso;
+        paciente.estatura = estatura;
+        paciente.asignarImc();
+        paciente.email = email.toLowerCase().trim();
+        paciente.telefono = telefono.trim();
+        paciente.direccion = direccion.trim();
+        paciente.generarNumExpediente();
+
+        return paciente;
+    }
     
     public void actualizar(String nombre, String apellidoPaterno, String apellidoMaterno,
             Short edad, Double peso, Double estatura, String email,
@@ -131,7 +159,7 @@ public class Paciente {
     
     private void validarNoEliminado() {
 		  if(this.estadoRegistro == EstadoRegistro.ELIMINADO)
-			  throw new IllegalArgumentException("El peciente esta eliminado");
+			  throw new IllegalArgumentException("El paciente esta eliminado");
 	  }
     
     private void validarDatos(String nombre, String apellidoPaterno, String apellidoMaterno, String email,
