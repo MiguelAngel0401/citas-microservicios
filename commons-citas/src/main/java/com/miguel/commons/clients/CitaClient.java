@@ -7,7 +7,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "mcv-citas")
 public interface CitaClient {
 	
-	@GetMapping("/id-medico/{idMedico}/citas-asignadas")
+	@GetMapping("/api/citas/id-medico/{idMedico}/citas-asignadas")
 	void medicoTieneCitasAsignadas(@PathVariable Long idMedico);
+	
+	@GetMapping("/api/citas/id-paciente/{idPaciente}/citas-asignadas")
+    void pacienteTieneCitasAsignadas(@PathVariable Long idPaciente);
 
 }

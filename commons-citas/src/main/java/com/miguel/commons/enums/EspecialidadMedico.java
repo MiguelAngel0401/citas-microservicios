@@ -30,7 +30,7 @@ public enum EspecialidadMedico {
 
     public static EspecialidadMedico obtenerEspecialidadPorCodigo(Long codigo) {
         for (EspecialidadMedico e : values()) {
-            if (e.codigo == codigo) {
+            if (e.codigo.equals(codigo)) {
                 return e;
             }
         }

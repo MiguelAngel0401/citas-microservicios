@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.miguel.commons.clients.CitaClient;
 import com.miguel.commons.dto.MedicoResponse;
 import com.miguel.commons.dto.PacienteRequest;
 import com.miguel.commons.dto.PacienteResponse;
@@ -25,6 +26,7 @@ public class PacienteServiceImpl implements PacienteService {
 
     private final PacienteRepository pacienteRepository;
     private final PacienteMapper pacienteMapper;
+    private final CitaClient citaClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,6 +42,18 @@ public class PacienteServiceImpl implements PacienteService {
         return pacienteMapper.entidadAResponse(obtenerPacienteActivoOException(id));
     }
 
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PacienteResponse obtenerPacienteSinEstado(Long id) {
+        log.info("Buscando paciente sin validar estado con id: {}", id);
+        
+        return pacienteMapper.entidadAResponse(
+                pacienteRepository.findById(id)
+                        .orElseThrow(() -> new RecursoNoEncontradoException(
+                                "Paciente no encontrado con id: " + id)));
+    }
+    
     @Override
     public PacienteResponse registrar(PacienteRequest request) {
         log.info("Registrando un nuevo paciente: {}", request.nombre());
@@ -61,6 +75,8 @@ public class PacienteServiceImpl implements PacienteService {
         Paciente paciente = obtenerPacienteActivoOException(id);
 
         log.info("Actualizando paciente con id: {}", id);
+        
+        citaClient.pacienteTieneCitasAsignadas(id);
 
         validarCambiosUnicos(request, id);
 
@@ -86,12 +102,15 @@ public class PacienteServiceImpl implements PacienteService {
         log.info("Eliminando paciente con id: {}", id);
 
         Paciente paciente = obtenerPacienteActivoOException(id);
+        
+        citaClient.pacienteTieneCitasAsignadas(id); 
 
         paciente.eliminar();
 
         log.info("Paciente eliminado con id: {}", id);
     }
-
+    
+  
     private Paciente obtenerPacienteActivoOException(Long id) {
         log.info("Buscando paciente con estado {} con id: {}", EstadoRegistro.ACTIVO, id);
 
@@ -103,23 +122,24 @@ public class PacienteServiceImpl implements PacienteService {
         log.info("Validando email unico ...");
 
         if (pacienteRepository.existsByEmailIgnoreCaseAndEstadoRegistro(request.email().trim(), EstadoRegistro.ACTIVO))
-            throw new IllegalArgumentException("Ya existe un paciente activo con el email: " + request.email());
+            throw new IllegalStateException("Ya existe un paciente activo con el email: " + request.email());
 
         log.info("Validando telefono unico ...");
 
         if (pacienteRepository.existsByTelefonoAndEstadoRegistro(request.telefono().trim(), EstadoRegistro.ACTIVO))
-            throw new IllegalArgumentException("Ya existe un paciente activo con el telefono: " + request.telefono());
+            throw new IllegalStateException("Ya existe un paciente activo con el telefono: " + request.telefono());
     }
 
     private void validarCambiosUnicos(PacienteRequest request, Long id) {
         log.info("Validando email unico ...");
 
         if (pacienteRepository.existsByEmailIgnoreCaseAndIdNotAndEstadoRegistro(request.email().trim(), id, EstadoRegistro.ACTIVO))
-            throw new IllegalArgumentException("Ya existe un paciente activo con el email: " + request.email());
+            throw new IllegalStateException("Ya existe un paciente activo con el email: " + request.email());
 
         log.info("Validando telefono unico ...");
 
         if (pacienteRepository.existsByTelefonoAndIdNotAndEstadoRegistro(request.telefono().trim(), id, EstadoRegistro.ACTIVO))
-            throw new IllegalArgumentException("Ya existe un paciente activo con el telefono: " + request.telefono());
+            throw new IllegalStateException("Ya existe un paciente activo con el telefono: " + request.telefono());
     }
+
 }

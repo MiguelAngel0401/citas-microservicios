@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.miguel.commons.clients.MedicoClient;
+import com.miguel.commons.clients.PacienteClient;
 import com.miguel.citas.dto.CitaRequest;
 import com.miguel.citas.dto.CitaResponse;
 import com.miguel.citas.entities.Cita;
@@ -12,6 +13,7 @@ import com.miguel.citas.enums.EstadoCita;
 import com.miguel.citas.mappers.CitaMapper;
 import com.miguel.citas.repositories.CitaRepository;
 import com.miguel.commons.dto.MedicoResponse;
+import com.miguel.commons.dto.PacienteResponse;
 import com.miguel.commons.enums.DisponibilidadMedico;
 import com.miguel.commons.enums.EstadoRegistro;
 import com.miguel.commons.exceptions.EntidadRelacionadaException;
@@ -33,6 +35,7 @@ public class CitaServiceImpl implements CitaService {
     private final MedicoClient medicoClient;
     private final List<EstadoCita> ESTADOS_INVALIDOS_REGISTROS_ASIGNADOS =
             List.of(EstadoCita.PENDIENTE, EstadoCita.CONFIRMADA,EstadoCita.EN_CURSO);
+    private final PacienteClient pacienteClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -41,7 +44,7 @@ public class CitaServiceImpl implements CitaService {
         return citaRepository.findByEstadoRegistro(EstadoRegistro.ACTIVO).stream()
                 .map(cita -> citaMapper.entidadAResponse(
                         cita,
-                        null,
+                        obtenerPacienteSinEstado(cita.getIdPaciente()),
                         obtenerMedicoSinEstado(cita.getIdMedico())
                 )).toList();
     }
@@ -50,12 +53,17 @@ public class CitaServiceImpl implements CitaService {
     @Transactional(readOnly = true)
     public CitaResponse obtenerPorId(Long id) {
         Cita cita = obtenerCitaActivaOException(id);
-        return citaMapper.entidadAResponse(cita, null, obtenerMedicoSinEstado(cita.getIdMedico()));
+        return citaMapper.entidadAResponse(cita, 
+        		obtenerPacienteSinEstado(cita.getIdPaciente()),
+        		obtenerMedicoSinEstado(cita.getIdMedico()));
     }
 
     @Override
     public CitaResponse registrar(CitaRequest request) {
         log.info("Registrando nueva cita: {}", request);
+        
+        pacienteClient.obtenerPacienteActivoPorId(request.idPaciente());
+        
         MedicoResponse medico = obtenerMedicoActivo(request.idMedico());
         validarDisponibilidadMedico(medico.idDisponibilidad());
 
@@ -63,10 +71,13 @@ public class CitaServiceImpl implements CitaService {
         validarPacienteTieneRegistrosAsignados(request.idPaciente());
         Cita cita = citaMapper.requestAEntidad(request);
         citaRepository.save(cita);
+        
+        cambiarDisponibilidadMedicoSegunEstadoCita(cita.getIdMedico(), cita.getEstadoCita());
 
         log.info("Cita registrada exitosamente");
         return citaMapper.entidadAResponse(
-                cita, null, obtenerMedicoSinEstado(cita.getIdMedico())
+                cita, obtenerPacienteSinEstado(cita.getIdPaciente()), 
+                obtenerMedicoSinEstado(cita.getIdMedico())
         );
     }
 
@@ -74,8 +85,12 @@ public class CitaServiceImpl implements CitaService {
     public CitaResponse actualizar(CitaRequest request, Long id) {
         Cita cita = obtenerCitaActivaOException(id);
         log.info("Actualizando cita con id: {}", id);
+        pacienteClient.obtenerPacienteActivoPorId(request.idPaciente());
         MedicoResponse medico = obtenerMedicoActivo(request.idMedico());
         validarDisponibilidadMedico(medico.idDisponibilidad());
+        if (!cita.getIdMedico().equals(request.idMedico())) {
+            cambiarDisponibilidadMedico(cita.getIdMedico(), DisponibilidadMedico.DISPONIBLE.getCodigo());
+        }
         if (!cita.getIdPaciente().equals(request.idPaciente()))
             validarPacienteTieneRegistrosAsignados(request.idPaciente());
         cita.actualizar(
@@ -85,21 +100,27 @@ public class CitaServiceImpl implements CitaService {
                 request.sintomas()
         );
         log.info("Cita actualizada con id: {}", id);
-        return citaMapper.entidadAResponse(cita, null, medico);
+        return citaMapper.entidadAResponse(cita, 
+        		obtenerPacienteSinEstado(cita.getIdPaciente()),
+        		medico);
     }
     
     @Override
-	public void actualizarEstadoCita(Long idCita, Long idEstadoCita) {
+    public void actualizarEstadoCita(Long idCita, Long idEstadoCita) {
     	Cita cita = obtenerCitaActivaOException(idCita);
     	
     	log.info("Actualizando estado de la cita con id: {}",idCita);
     	
-    	cita.actualizarEstadoCita(EstadoCita.obtenerEstadoCitaPorCodigo(idEstadoCita));
+    	EstadoCita nuevoEstado = EstadoCita.obtenerEstadoCitaPorCodigo(idEstadoCita);
     	
-    	cambiarDisponibilidadMedicoSegunEstadoCita(cita.getIdMedico(), cita.getEstadoCita());
+    	cita.actualizarEstadoCita(nuevoEstado);
+    	
+    	citaRepository.saveAndFlush(cita);
+    	
+    	cambiarDisponibilidadMedicoSegunEstadoCita(cita.getIdMedico(), nuevoEstado);
     	
     	log.info("Estado de la cita {} actualizado correctamente", cita.getId());
-	}
+    }
 
     @Override
     public void medicoTieneCitasAsignadas(Long idMedico) {
@@ -126,6 +147,8 @@ public class CitaServiceImpl implements CitaService {
 
         log.info("Eliminando cita con id: {}", id);
         cita.eliminar();
+        citaRepository.saveAndFlush(cita);
+        cambiarDisponibilidadMedicoSegunEstadoCita(cita.getIdMedico(), EstadoCita.CANCELADA);
         log.info("Cita con id {} ha sido marcada como eliminada");
     }
 
@@ -161,6 +184,30 @@ public class CitaServiceImpl implements CitaService {
                             "cita activa con los estados de: " + ESTADOS_INVALIDOS_REGISTROS_ASIGNADOS
             );
     }
+    
+    @Override
+	public void pacienteTieneCitasAsignadas(Long idPaciente) {
+		log.info("Validando si el paciente con id {} tiene citas activas", idPaciente);
+		
+		boolean tieneCitas = citaRepository
+	            .existsByIdPacienteAndEstadoRegistroAndEstadoCitaIn(
+	                    idPaciente,
+	                    EstadoRegistro.ACTIVO,
+	                    ESTADOS_INVALIDOS_REGISTROS_ASIGNADOS);
+		
+		if (tieneCitas) {
+			throw new EntidadRelacionadaException(
+					"No se puede modificar el paciente que ya tiene citas con estado: "
+					+ ESTADOS_INVALIDOS_REGISTROS_ASIGNADOS);
+		}
+		
+	}
+    
+    private PacienteResponse obtenerPacienteSinEstado(Long idPaciente) {
+        log.info("Buscando paciente sin estado con id: {} en el servicio remoto...", idPaciente);
+        return pacienteClient.obtenerPacienteSinEstadoPorId(idPaciente);
+    }
+
     
     private void cambiarDisponibilidadMedico(Long idMedico, Long idDisponibilidad) {
 		log.info("Actualizando disponibilidad de medico con id: {} a {}",

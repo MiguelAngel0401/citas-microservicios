@@ -103,6 +103,8 @@ public class Cita {
     	if(!this.estadoCita.puedeCambiarA(nuevoEstado))
     		throw new IllegalStateException("La cita con estado " + this.estadoCita + 
     				" solo puede camiar a : " + this.estadoCita.puedeCambiar());
+    	
+    	this.estadoCita = nuevoEstado;
     }
     
     public void eliminar() {
