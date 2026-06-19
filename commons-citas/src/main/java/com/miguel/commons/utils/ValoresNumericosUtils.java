@@ -12,7 +12,7 @@ public class ValoresNumericosUtils {
     public static void validarEnteroPositivo(Integer entero, String mensaje){
         validarNumeroRequerido(entero);
 
-        if(entero < 0)
+        if(entero <= 0)
             throw new IllegalArgumentException(mensaje);
     }
 

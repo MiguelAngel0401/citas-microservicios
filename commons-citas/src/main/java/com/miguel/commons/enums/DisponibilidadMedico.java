@@ -16,13 +16,13 @@ public enum DisponibilidadMedico {
     DE_GUARDIA(4L, "Disponible bajo guardia"),
     NO_DISPONIBLE(5L, "No disponible por el momento");
 	
-	public Long codigo;
+	private final Long codigo;
 
     private final String descripcion;
     
     public static DisponibilidadMedico obtenerDisponibilidadPorCodigo(Long codigo) {
         for (DisponibilidadMedico d : values()) {
-            if (d.codigo == codigo) {
+            if (d.codigo.equals(codigo)) {
                 return d;
             }
         }

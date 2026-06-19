@@ -7,24 +7,22 @@ spring:
   cloud:
     gateway:
       server:
-        webflux:
+        webmvc:
           routes:
+            - id: mcv-pacientes
+              uri: lb://mcv-pacientes
+              predicates:
+                - Path=/api/pacientes/**
+
             - id: mcv-medicos
               uri: lb://mcv-medicos
               predicates:
                 - Path=/api/medicos/**
-              filters:
-                - StripPrefix=2
 
             - id: mcv-citas
               uri: lb://mcv-citas
               predicates:
                 - Path=/api/citas/**
-              filters:
-                - StripPrefix=2
-
-    loadbalancer:
-      enabled: true
 
 eureka:
   client:

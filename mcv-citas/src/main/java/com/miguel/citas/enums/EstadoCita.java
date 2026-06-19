@@ -33,18 +33,18 @@ public enum EstadoCita {
 		}
 	},
 	
-	FINALIZADA(4L, "Cita Finalizada",false, true) {
-		@Override
-		public Set<EstadoCita> puedeCambiar() {
-			return Set.of();
-		}
+	FINALIZADA(4L, "Cita Finalizada", false, false) {
+	    @Override
+	    public Set<EstadoCita> puedeCambiar() {
+	        return Set.of();
+	    }
 	},
-	
-	CANCELADA(5L, "Cita cancelada",false, true) {
-		@Override
-		public Set<EstadoCita> puedeCambiar() {
-			return Set.of();
-		}
+
+	CANCELADA(5L, "Cita cancelada", false, false) {
+	    @Override
+	    public Set<EstadoCita> puedeCambiar() {
+	        return Set.of();
+	    }
 	};
 	
 	private final Long codigo;
@@ -63,7 +63,7 @@ public enum EstadoCita {
 	
 	public static EstadoCita obtenerEstadoCitaPorCodigo(Long codigo) {
         for (EstadoCita e : values()) {
-            if (e.codigo == codigo) {
+        	if (e.codigo.equals(codigo)) {
                 return e;
             }
         }

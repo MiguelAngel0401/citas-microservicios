@@ -13,10 +13,10 @@ public interface MedicoClient {
 	@GetMapping("/api/medicos/{id}")
 	MedicoResponse obtenerMedicoActivoPorId(@PathVariable Long id);
 
-	@GetMapping("/api/medicos/{id-medico}/{id}")
+	@GetMapping("/api/medicos/id-medico/{id}")
 	MedicoResponse obtenerMedicoSinEstadoPorId(@PathVariable Long id);
 	
-	@PutMapping("/{idMedico}/disponibilidad/{idDisponibilidad}")
+	@PutMapping("/api/medicos/{idMedico}/disponibilidad/{idDisponibilidad}")
 	void actualizarDisponibilidadMedico(
 			@PathVariable Long idMedico,
 			@PathVariable Long idDisponibilidad);

@@ -24,7 +24,7 @@ public class MedicoController extends CommonController<MedicoRequest, MedicoResp
         super(service);
     }
 
-    @GetMapping("/{id-medico}/{id}")
+    @GetMapping("/id-medico/{id}")
     public ResponseEntity<MedicoResponse> obtenerMedicoPorIdSinEstado(
             @PathVariable @Positive(message = "El ID debe ser positivo") Long id) {
         return ResponseEntity.ok(service.obtenerMedicoPorIdSinEstado(id));

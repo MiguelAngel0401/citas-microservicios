@@ -131,9 +131,6 @@ public class MedicoServiceImpl implements MedicoService {
 		medico.actualizarDisponibilidad(nuevaDisponibilidad);
 		
 		log.info("Disponibilidad del medico con id {} cambio de {} a {}", idMedico, anteriorDisponibilidad, nuevaDisponibilidad);
-		
-		
-		
 	}
 	
 	private Medico obtenerMedicoActivoOException(Long id) {
@@ -148,17 +145,17 @@ public class MedicoServiceImpl implements MedicoService {
 	    log.info("Validando email unico ...");
 	    
 	    if(medicoRepository.existsByEmailIgnoreCaseAndEstadoRegistro(request.email().trim(), EstadoRegistro.ACTIVO))
-	        throw new IllegalArgumentException("Ya existe un medico activo con el email: " + request.email());
+	        throw new IllegalStateException("Ya existe un medico activo con el email: " + request.email());
 	    
 	    log.info("Validando telefono unico ...");
 	    
 	    if(medicoRepository.existsByTelefonoAndEstadoRegistro(request.telefono().trim(), EstadoRegistro.ACTIVO))
-	        throw new IllegalArgumentException("Ya existe un medico activo registrado con el telefono: " + request.telefono());
+	        throw new IllegalStateException("Ya existe un medico activo registrado con el telefono: " + request.telefono());
 	    
 	    log.info("Validando cedula profesional unica ...");
 	    
 	    if(medicoRepository.existsByCedulaProfesionalIgnoreCaseAndEstadoRegistro(request.cedulaProfesional().trim(), EstadoRegistro.ACTIVO))
-	        throw new IllegalArgumentException("Ya existe un medico activo registrado con la cedula: " + request.cedulaProfesional());
+	        throw new IllegalStateException("Ya existe un medico activo registrado con la cedula: " + request.cedulaProfesional());
 	}
 	
 	public void validarCambiosUnicos(MedicoRequest request, Long id) {
@@ -166,17 +163,17 @@ public class MedicoServiceImpl implements MedicoService {
 	    log.info("Validando email unico ...");
 	    
 	    if(medicoRepository.existsByEmailIgnoreCaseAndEstadoRegistroAndIdNot(request.email().trim(), EstadoRegistro.ACTIVO, id))
-	        throw new IllegalArgumentException("Ya existe un medico activo con el email: " + request.email());
+	        throw new IllegalStateException("Ya existe un medico activo con el email: " + request.email());
 	    
 	    log.info("Validando telefono unico ...");
 	    
 	    if(medicoRepository.existsByTelefonoAndEstadoRegistroAndIdNot(request.telefono().trim(), EstadoRegistro.ACTIVO, id))
-	        throw new IllegalArgumentException("Ya existe un medico activo registrado con el telefono: " + request.telefono());
+	        throw new IllegalStateException("Ya existe un medico activo registrado con el telefono: " + request.telefono());
 	    
 	    log.info("Validando cedula profesional unica ...");
 	    
 	    if(medicoRepository.existsByCedulaProfesionalIgnoreCaseAndEstadoRegistroAndIdNot(request.cedulaProfesional().trim(), EstadoRegistro.ACTIVO, id))
-	        throw new IllegalArgumentException("Ya existe un medico activo registrado con la cedula: " + request.cedulaProfesional());
+	        throw new IllegalStateException("Ya existe un medico activo registrado con la cedula: " + request.cedulaProfesional());
 	}
 	
 	private void medicoTieneCitasAsignadas(Long idMedico) {
